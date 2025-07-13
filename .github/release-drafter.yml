@@ -1,0 +1,42 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'feature'
+      - 'enhancement'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+  - title: '🧰 Maintenance'
+    labels:
+      - 'chore'
+      - 'dependencies'
+template: |
+  ## Changes
+
+  $CHANGES
+
+  ## Contributors
+
+  $CONTRIBUTORS
+
+  ## Installation
+
+  ### Prerequisites
+  - Windows 10/11
+  - .NET 8.0 Runtime
+
+  ### Download
+  Download the latest release from the assets below.
+
+  ### Installation Steps
+  1. Extract the ZIP file to your desired location
+  2. Run `ReturnToMoriaServerManager.exe`
+  3. Follow the setup wizard to install SteamCMD and the server
+
+  ## Changelog
+
+  $CHANGES 

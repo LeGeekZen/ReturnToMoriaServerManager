@@ -1,0 +1,29 @@
+name: Deploy Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Download Release Assets
+      uses: actions/download-artifact@v4
+      with:
+        name: ReturnToMoriaServerManager
+        path: ./release/
+        
+    - name: Create Release Package
+      run: |
+        $version = "${{ github.event.release.tag_name }}"
+        $packageName = "ReturnToMoriaServerManager-$version.zip"
+        Compress-Archive -Path "./release/*" -DestinationPath "./$packageName"
+        
+    - name: Upload Release Package
+      uses: actions/upload-artifact@v4
+      with:
+        name: ReleasePackage
+        path: ./ReturnToMoriaServerManager-${{ github.event.release.tag_name }}.zip
+        retention-days: 90 

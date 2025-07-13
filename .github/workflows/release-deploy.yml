@@ -1,0 +1,122 @@
+name: Deploy Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy-release:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Download release assets
+      uses: actions/download-artifact@v4
+      with:
+        name: ReturnToMoriaServerManager
+        path: ./release/
+        
+    - name: Create release package
+      run: |
+        $version = "${{ github.event.release.tag_name }}"
+        $packageName = "ReturnToMoriaServerManager-$version.zip"
+        
+        # Create a clean release package
+        New-Item -ItemType Directory -Path "./release-package" -Force
+        Copy-Item -Path "./release/*" -Destination "./release-package/" -Recurse
+        
+        # Add README and LICENSE to the package
+        Copy-Item -Path "./README.md" -Destination "./release-package/"
+        Copy-Item -Path "./LICENSE" -Destination "./release-package/"
+        
+        # Create installation instructions
+        $installInstructions = @"
+# Installation Instructions
+
+## Prerequisites
+- Windows 10/11
+- .NET 8.0 Runtime (download from https://dotnet.microsoft.com/download/dotnet/8.0)
+
+## Installation Steps
+1. Extract this ZIP file to your desired location
+2. Run `ReturnToMoriaServerManager.exe`
+3. Follow the setup wizard to install SteamCMD and the server
+4. Configure your server settings
+5. Start your server
+
+## Support
+- GitHub Issues: https://github.com/your-username/ReturnToMoria_DedicatedServer/issues
+- Documentation: https://your-username.github.io/ReturnToMoria_DedicatedServer/
+
+## Version
+$version
+"@
+        
+        $installInstructions | Out-File -FilePath "./release-package/INSTALL.md" -Encoding UTF8
+        
+        # Create the ZIP package
+        Compress-Archive -Path "./release-package/*" -DestinationPath "./$packageName" -Force
+        
+    - name: Upload release package
+      uses: actions/upload-artifact@v4
+      with:
+        name: ReleasePackage
+        path: ./ReturnToMoriaServerManager-${{ github.event.release.tag_name }}.zip
+        retention-days: 90
+        
+    - name: Create release asset
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          const assetPath = path.join(process.env.GITHUB_WORKSPACE, `ReturnToMoriaServerManager-${context.payload.release.tag_name}.zip`);
+          
+          if (fs.existsSync(assetPath)) {
+            await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: context.payload.release.id,
+              name: `ReturnToMoriaServerManager-${context.payload.release.tag_name}.zip`,
+              data: fs.readFileSync(assetPath)
+            });
+          }
+          
+    - name: Notify community
+      uses: actions/github-script@v7
+      with:
+        script: |
+          // Create a discussion post about the new release
+          await github.rest.discussions.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `🎉 New Release: ${context.payload.release.tag_name}`,
+            body: `## New Release Available!
+            
+            **Version:** ${context.payload.release.tag_name}
+            **Release Date:** ${new Date().toLocaleDateString()}
+            
+            ### What's New
+            ${context.payload.release.body || 'Check the release notes for details.'}
+            
+            ### Download
+            Download the latest release from: ${context.payload.release.html_url}
+            
+            ### Installation
+            1. Download and extract the ZIP file
+            2. Run ReturnToMoriaServerManager.exe
+            3. Follow the setup wizard
+            
+            ### Feedback
+            Please report any issues or share your feedback in the [Issues section](https://github.com/your-username/ReturnToMoria_DedicatedServer/issues).
+            
+            Happy gaming! 🎮`,
+            category_id: 1 // General category
+          }); 

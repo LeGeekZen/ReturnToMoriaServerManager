@@ -1,0 +1,38 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore ReturnToMoriaServerManager.sln
+      
+    - name: Build
+      run: dotnet build ReturnToMoriaServerManager.sln --no-restore --configuration Release
+      
+    - name: Publish
+      run: dotnet publish ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj --configuration Release --output ./publish --self-contained false
+      
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          ./publish/**/*
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

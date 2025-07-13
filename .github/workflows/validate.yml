@@ -1,0 +1,69 @@
+name: Validate Code
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Validate project structure
+      run: |
+        # Check if solution file exists
+        if (!(Test-Path "ReturnToMoriaServerManager.sln")) {
+          Write-Error "Solution file not found"
+          exit 1
+        }
+        
+        # Check if project file exists
+        if (!(Test-Path "ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj")) {
+          Write-Error "Project file not found"
+          exit 1
+        }
+        
+        Write-Host "Project structure validation passed"
+        
+    - name: Validate dependencies
+      run: |
+        dotnet restore ReturnToMoriaServerManager.sln
+        dotnet list package --vulnerable
+        
+    - name: Validate build
+      run: |
+        dotnet build ReturnToMoriaServerManager.sln --configuration Release --verbosity minimal
+        
+    - name: Validate XAML
+      run: |
+        # Check for XAML syntax errors
+        dotnet build ReturnToMoriaServerManager.sln --configuration Release --verbosity normal | Select-String "error" | Where-Object { $_ -match "\.xaml" }
+        
+    - name: Check file headers
+      run: |
+        # Check if source files have proper headers
+        $sourceFiles = Get-ChildItem -Recurse -Include "*.cs", "*.xaml" -Exclude "obj/*", "bin/*"
+        $missingHeaders = @()
+        
+        foreach ($file in $sourceFiles) {
+          $content = Get-Content $file.FullName -Raw
+          if ($content -notmatch "/\*.*Fichier.*\*/") {
+            $missingHeaders += $file.FullName
+          }
+        }
+        
+        if ($missingHeaders.Count -gt 0) {
+          Write-Warning "Files missing headers:"
+          $missingHeaders | ForEach-Object { Write-Warning $_ }
+        } else {
+          Write-Host "All source files have proper headers"
+        } 

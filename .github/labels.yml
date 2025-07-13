@@ -1,0 +1,49 @@
+labels:
+  - name: bug
+    color: d73a4a
+    description: Something isn't working
+  - name: enhancement
+    color: a2eeef
+    description: New feature or request
+  - name: documentation
+    color: 0075ca
+    description: Improvements or additions to documentation
+  - name: good first issue
+    color: 7057ff
+    description: Good for newcomers
+  - name: help wanted
+    color: 008672
+    description: Extra attention is needed
+  - name: invalid
+    color: e4e669
+    description: Something is wrong
+  - name: question
+    color: d876e3
+    description: Further information is requested
+  - name: wontfix
+    color: fffefe
+    description: This will not be worked on
+  - name: feature
+    color: 0e8a16
+    description: New feature
+  - name: refactoring
+    color: 5319e7
+    description: Code refactoring
+  - name: performance
+    color: fbca04
+    description: Performance improvements
+  - name: ui/ux
+    color: 1d76db
+    description: User interface or user experience changes
+  - name: server
+    color: 84b6eb
+    description: Server-related changes
+  - name: configuration
+    color: c2e0c6
+    description: Configuration changes
+  - name: wpf
+    color: 006b75
+    description: WPF-specific changes
+  - name: .net
+    color: 512bd4
+    description: .NET framework changes 

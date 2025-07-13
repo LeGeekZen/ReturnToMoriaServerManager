@@ -1,0 +1,600 @@
+<!--
+    Fichier : ServerConfigPage.xaml
+    Emplacement : ReturnToMoriaServerManager/Views/ServerConfigPage.xaml
+    Auteur : Le Geek Zen
+    Description : Page de configuration avancée du serveur Return to Moria
+-->
+<Page x:Class="ReturnToMoriaServerManager.Views.ServerConfigPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:converters="clr-namespace:ReturnToMoriaServerManager.Converters"
+      Title="Configuration Avancée du Serveur" 
+      Background="#FF1E1E1E">
+    
+    <!-- Ressources et styles de la page -->
+    <Page.Resources>
+        
+        <!-- Style pour les éléments de ComboBox avec thème sombre -->
+        <Style x:Key="ComboBoxItemStyle" TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="#FF2D2D2D"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="5,2"/>
+            <Style.Triggers>
+                <Trigger Property="IsHighlighted" Value="True">
+                    <Setter Property="Background" Value="#FF404040"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#FF3498DB"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <!-- Convertisseurs pour la liaison de données -->
+        <converters:DifficultyPresetToVisibilityConverter x:Key="DifficultyPresetToVisibilityConverter"/>
+        
+        <!-- Style pour les en-têtes de section -->
+        <Style x:Key="HeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin" Value="0,10,0,15"/>
+        </Style>
+        
+        <!-- Style pour les labels -->
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#FFCCCCCC"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+        
+        <!-- Style pour les champs de texte -->
+        <Style x:Key="TextBoxStyle" TargetType="TextBox">
+            <Setter Property="Height" Value="25"/>
+            <Setter Property="Padding" Value="5,2"/>
+            <Setter Property="BorderBrush" Value="#FF404040"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="#FF2D2D2D"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        
+        <!-- Style personnalisé pour les ComboBox -->
+        <Style x:Key="ComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Height" Value="25"/>
+            <Setter Property="Padding" Value="5,2"/>
+            <Setter Property="BorderBrush" Value="#FF404040"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="#FF2D2D2D"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource ComboBoxItemStyle}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <!-- Bouton de basculement pour ouvrir/fermer la liste -->
+                            <ToggleButton x:Name="ToggleButton"
+                                          Grid.Column="2"
+                                          Focusable="false"
+                                          IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Border"
+                                                Background="#FF2D2D2D"
+                                                BorderBrush="#FF404040"
+                                                BorderThickness="1"
+                                                CornerRadius="0">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="20"/>
+                                                </Grid.ColumnDefinitions>
+                                                <!-- Flèche de la ComboBox -->
+                                                <Path x:Name="Arrow"
+                                                      Grid.Column="1"
+                                                      Fill="White"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      Data="M 0 0 L 4 4 L 8 0 Z"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <!-- Effet de survol -->
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="#FF404040"/>
+                                            </Trigger>
+                                            <!-- Effet de clic -->
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="#FF505050"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            
+                            <!-- Présentation du contenu sélectionné -->
+                            <ContentPresenter x:Name="ContentSite"
+                                              IsHitTestVisible="False"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                              Margin="5,2,25,2"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Left">
+                                <ContentPresenter.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Style>
+                                </ContentPresenter.Resources>
+                            </ContentPresenter>
+                            
+                            <!-- Zone de texte éditable (pour ComboBox éditables) -->
+                            <TextBox x:Name="PART_EditableTextBox"
+                                     Style="{x:Null}"
+                                     Template="{DynamicResource ComboBoxTextBox}"
+                                     HorizontalAlignment="Left"
+                                     VerticalAlignment="Center"
+                                     Margin="5,2,25,2"
+                                     Focusable="True"
+                                     Background="Transparent"
+                                     Foreground="White"
+                                     Visibility="Hidden"
+                                     IsReadOnly="{TemplateBinding IsReadOnly}"/>
+                            
+                            <!-- Popup de la liste déroulante -->
+                            <Popup x:Name="Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Grid x:Name="DropDown"
+                                      SnapsToDevicePixels="True"
+                                      MinWidth="{TemplateBinding ActualWidth}"
+                                      MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <Border x:Name="DropDownBorder"
+                                            Background="#FF2D2D2D"
+                                            BorderThickness="1"
+                                            BorderBrush="#FF404040"/>
+                                    <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <!-- Gestion des cas spéciaux -->
+                            <Trigger Property="HasItems" Value="false">
+                                <Setter TargetName="DropDownBorder" Property="MinHeight" Value="95"/>
+                            </Trigger>
+                            <Trigger Property="IsGrouping" Value="true">
+                                <Setter Property="ScrollViewer.CanContentScroll" Value="false"/>
+                            </Trigger>
+                            <Trigger Property="IsEditable" Value="true">
+                                <Setter Property="IsTabStop" Value="false"/>
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Style principal pour les boutons -->
+        <Style x:Key="ButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Padding" Value="15,5"/>
+            <Setter Property="Background" Value="#FFD2B48C"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#FF8B4513"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <!-- Effet de survol -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FFDEB887"/>
+                </Trigger>
+                <!-- Effet de clic -->
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#FFCD853F"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <!-- Style secondaire pour les boutons (variante plus sombre) -->
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource ButtonStyle}">
+            <Setter Property="Background" Value="#FFA0522D"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Style.Triggers>
+                <!-- Effet de survol -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#FF8B4513"/>
+                </Trigger>
+                <!-- Effet de clic -->
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#FF654321"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Page.Resources>
+
+    <!-- Layout principal de la page -->
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête de la page avec boutons d'action -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="Configuration Avancée du Serveur Return to Moria" 
+                       Style="{StaticResource HeaderStyle}"/>
+            <!-- Boutons d'action pour sauvegarder et réinitialiser -->
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                <Button Content="Sauvegarder" 
+                        Command="{Binding SaveConfigCommand}" 
+                        Margin="0,0,10,0"/>
+                <Button Content="Réinitialiser" 
+                        Command="{Binding ResetToDefaultsCommand}" 
+                        Margin="0,0,10,0"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Zone de contenu principal avec défilement -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Colonne gauche : Configuration de base et du monde -->
+                <StackPanel Grid.Column="0">
+                    <!-- Section [Main] : Configuration principale du serveur -->
+                    <GroupBox Header="Configuration Principale" Foreground="White" Margin="0,0,0,15">
+                        <Grid Margin="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Text="Mot de passe (optionnel):" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="0"/>
+                            <TextBox Text="{Binding Config.OptionalPassword}" 
+                                     Style="{StaticResource TextBoxStyle}" 
+                                     Grid.Column="1" Grid.Row="0"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Section [World] : Configuration du monde et de son fichier -->
+                    <GroupBox Header="Configuration du Monde" Foreground="White" Margin="0,0,0,15">
+                        <Grid Margin="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Text="Nom du monde:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="0"/>
+                            <TextBox Text="{Binding Config.WorldName}" 
+                                     Style="{StaticResource TextBoxStyle}" 
+                                     Grid.Column="1" Grid.Row="0"/>
+                            
+                            <TextBlock Text="Nom de fichier (optionnel):" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="1"/>
+                            <TextBox Text="{Binding Config.OptionalWorldFilename}" 
+                                     Style="{StaticResource TextBoxStyle}" 
+                                     Grid.Column="1" Grid.Row="1"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Section [World.Create] : Paramètres de création du monde -->
+                    <GroupBox Header="Création du Monde" Foreground="White" Margin="0,0,0,15">
+                        <Grid Margin="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Text="Type de monde:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="0"/>
+                            <ComboBox Text="{Binding Config.WorldType}" 
+                                      Style="{StaticResource ComboBoxStyle}" 
+                                      Grid.Column="1" Grid.Row="0">
+                                <ComboBoxItem Content="Campagne"/>
+                                <ComboBoxItem Content="Bac à sable"/>
+                            </ComboBox>
+                            
+                            <TextBlock Text="Seed (random ou nombre):" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="1"/>
+                            <TextBox Text="{Binding Config.Seed}" 
+                                     Style="{StaticResource TextBoxStyle}" 
+                                     Grid.Column="1" Grid.Row="1"/>
+                            
+                            <TextBlock Text="Préréglage de difficulté:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="2"/>
+                            <ComboBox Text="{Binding DifficultyPreset}" 
+                                      Style="{StaticResource ComboBoxStyle}" 
+                                      Grid.Column="1" Grid.Row="2">
+                                <ComboBoxItem Content="Histoire"/>
+                                <ComboBoxItem Content="Solo"/>
+                                <ComboBoxItem Content="Normal"/>
+                                <ComboBoxItem Content="Difficile"/>
+                                <ComboBoxItem Content="Personnalisé"/>
+                            </ComboBox>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- Section Difficulté Personnalisée : Paramètres avancés de difficulté -->
+                    <GroupBox Header="Difficulté Personnalisée" 
+                              Foreground="White" 
+                              Margin="0,0,0,15">
+                        <Grid Margin="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Text="Difficulté de combat:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="0"/>
+                            <ComboBox Text="{Binding Config.CombatDifficulty}" 
+                                      Style="{StaticResource ComboBoxStyle}" 
+                                      Grid.Column="1" Grid.Row="0">
+                                <ComboBoxItem Content="Très faible"/>
+                                <ComboBoxItem Content="Faible"/>
+                                <ComboBoxItem Content="Par défaut"/>
+                                <ComboBoxItem Content="Élevé"/>
+                                <ComboBoxItem Content="Très élevé"/>
+                            </ComboBox>
+                            
+                            <TextBlock Text="Agressivité des ennemis:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="1"/>
+                            <ComboBox Text="{Binding Config.EnemyAggression}" 
+                                      Style="{StaticResource ComboBoxStyle}" 
+                                      Grid.Column="1" Grid.Row="1">
+                                <ComboBoxItem Content="Très faible"/>
+                                <ComboBoxItem Content="Faible"/>
+                                <ComboBoxItem Content="Par défaut"/>
+                                <ComboBoxItem Content="Élevé"/>
+                                <ComboBoxItem Content="Très élevé"/>
+                            </ComboBox>
+                            
+                            <TextBlock Text="Difficulté de survie:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="2"/>
+                            <ComboBox Text="{Binding Config.SurvivalDifficulty}" 
+                                      Style="{StaticResource ComboBoxStyle}" 
+                                      Grid.Column="1" Grid.Row="2">
+                                <ComboBoxItem Content="Très faible"/>
+                                <ComboBoxItem Content="Faible"/>
+                                <ComboBoxItem Content="Par défaut"/>
+                                <ComboBoxItem Content="Élevé"/>
+                                <ComboBoxItem Content="Très élevé"/>
+                            </ComboBox>
+                            
+                            <TextBlock Text="Drops de minage:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="3"/>
+                            <ComboBox Text="{Binding Config.MiningDrops}" 
+                                      Style="{StaticResource ComboBoxStyle}" 
+                                      Grid.Column="1" Grid.Row="3">
+                                <ComboBoxItem Content="Très faible"/>
+                                <ComboBoxItem Content="Faible"/>
+                                <ComboBoxItem Content="Par défaut"/>
+                                <ComboBoxItem Content="Élevé"/>
+                                <ComboBoxItem Content="Très élevé"/>
+                            </ComboBox>
+                            
+                            <TextBlock Text="Drops du monde:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="4"/>
+                            <ComboBox Text="{Binding Config.WorldDrops}" 
+                                      Style="{StaticResource ComboBoxStyle}" 
+                                      Grid.Column="1" Grid.Row="4">
+                                <ComboBoxItem Content="Très faible"/>
+                                <ComboBoxItem Content="Faible"/>
+                                <ComboBoxItem Content="Par défaut"/>
+                                <ComboBoxItem Content="Élevé"/>
+                                <ComboBoxItem Content="Très élevé"/>
+                            </ComboBox>
+                            
+                            <TextBlock Text="Fréquence des hordes:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="5"/>
+                            <ComboBox Text="{Binding Config.HordeFrequency}" 
+                                      Style="{StaticResource ComboBoxStyle}" 
+                                      Grid.Column="1" Grid.Row="5">
+                                <ComboBoxItem Content="Très faible"/>
+                                <ComboBoxItem Content="Faible"/>
+                                <ComboBoxItem Content="Par défaut"/>
+                                <ComboBoxItem Content="Élevé"/>
+                                <ComboBoxItem Content="Très élevé"/>
+                            </ComboBox>
+                            
+                            <TextBlock Text="Fréquence des sièges:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="6"/>
+                            <ComboBox Text="{Binding Config.SiegeFrequency}" 
+                                      Style="{StaticResource ComboBoxStyle}" 
+                                      Grid.Column="1" Grid.Row="6">
+                                <ComboBoxItem Content="Très faible"/>
+                                <ComboBoxItem Content="Faible"/>
+                                <ComboBoxItem Content="Par défaut"/>
+                                <ComboBoxItem Content="Élevé"/>
+                                <ComboBoxItem Content="Très élevé"/>
+                            </ComboBox>
+                            
+                            <TextBlock Text="Fréquence des patrouilles:" 
+                                       Style="{StaticResource LabelStyle}" 
+                                       Grid.Column="0" Grid.Row="7"/>
+                            <ComboBox Text="{Binding Config.PatrolFrequency}" 
+                                      Style="{StaticResource ComboBoxStyle}" 
+                                      Grid.Column="1" Grid.Row="7">
+                                <ComboBoxItem Content="Très faible"/>
+                                <ComboBoxItem Content="Faible"/>
+                                <ComboBoxItem Content="Par défaut"/>
+                                <ComboBoxItem Content="Élevé"/>
+                                <ComboBoxItem Content="Très élevé"/>
+                            </ComboBox>
+                        </Grid>
+                    </GroupBox>
+                </StackPanel>
+
+                <!-- Colonne droite : Configuration réseau et performance -->
+                <StackPanel Grid.Column="2">
+                    <!-- Section [Host] : Configuration réseau du serveur -->
+                    <GroupBox Header="Configuration Réseau" Foreground="White" Margin="0,0,0,15">
+                    <Grid Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Text="Adresse d'écoute:" 
+                                   Style="{StaticResource LabelStyle}" 
+                                   Grid.Column="0" Grid.Row="0"/>
+                        <TextBox Text="{Binding Config.ListenAddress}" 
+                                 Style="{StaticResource TextBoxStyle}" 
+                                 Grid.Column="1" Grid.Row="0"/>
+                        
+                        <TextBlock Text="Port d'écoute:" 
+                                   Style="{StaticResource LabelStyle}" 
+                                   Grid.Column="0" Grid.Row="1"/>
+                        <TextBox Text="{Binding Config.ListenPort}" 
+                                 Style="{StaticResource TextBoxStyle}" 
+                                 Grid.Column="1" Grid.Row="1"/>
+                        
+                        <TextBlock Text="Adresse de publication:" 
+                                   Style="{StaticResource LabelStyle}" 
+                                   Grid.Column="0" Grid.Row="2"/>
+                        <TextBox Text="{Binding Config.AdvertiseAddress}" 
+                                 Style="{StaticResource TextBoxStyle}" 
+                                 Grid.Column="1" Grid.Row="2"/>
+                        
+                        <TextBlock Text="Port de publication:" 
+                                   Style="{StaticResource LabelStyle}" 
+                                   Grid.Column="0" Grid.Row="3"/>
+                        <TextBox Text="{Binding Config.AdvertisePort}" 
+                                 Style="{StaticResource TextBoxStyle}" 
+                                 Grid.Column="1" Grid.Row="3"/>
+                        
+                        <TextBlock Text="Temps de retry initial (sec):" 
+                                   Style="{StaticResource LabelStyle}" 
+                                   Grid.Column="0" Grid.Row="4"/>
+                        <TextBox Text="{Binding Config.InitialConnectionRetryTime}" 
+                                 Style="{StaticResource TextBoxStyle}" 
+                                 Grid.Column="1" Grid.Row="4"/>
+                        
+                        <TextBlock Text="Temps de retry après déco (sec):" 
+                                   Style="{StaticResource LabelStyle}" 
+                                   Grid.Column="0" Grid.Row="5"/>
+                        <TextBox Text="{Binding Config.AfterDisconnectionRetryTime}" 
+                                 Style="{StaticResource TextBoxStyle}" 
+                                 Grid.Column="1" Grid.Row="5"/>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Section [Console] : Configuration de la console serveur -->
+                <GroupBox Header="Console" Foreground="White" Margin="0,0,0,15">
+                    <Grid Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Text="Console activée:" 
+                                   Style="{StaticResource LabelStyle}" 
+                                   Grid.Column="0" Grid.Row="0"/>
+                        <CheckBox IsChecked="{Binding Config.ConsoleEnabled}" 
+                                  VerticalAlignment="Center" 
+                                  Grid.Column="1" Grid.Row="0"
+                                  Foreground="White"/>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Section [Performance] : Paramètres de performance du serveur -->
+                <GroupBox Header="Performance" Foreground="White" Margin="0,0,0,15">
+                    <Grid Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Text="FPS du serveur:" 
+                                   Style="{StaticResource LabelStyle}" 
+                                   Grid.Column="0" Grid.Row="0"/>
+                        <TextBox Text="{Binding Config.ServerFPS}" 
+                                 Style="{StaticResource TextBoxStyle}" 
+                                 Grid.Column="1" Grid.Row="0"/>
+                        
+                        <TextBlock Text="Limite de zones chargées:" 
+                                   Style="{StaticResource LabelStyle}" 
+                                   Grid.Column="0" Grid.Row="1"/>
+                        <TextBox Text="{Binding Config.LoadedAreaLimit}" 
+                                 Style="{StaticResource TextBoxStyle}" 
+                                 Grid.Column="1" Grid.Row="1"/>
+                    </Grid>
+                </GroupBox>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Message de statut en bas de page -->
+        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" 
+                   FontSize="16" 
+                   FontWeight="SemiBold" 
+                   Foreground="White" 
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Margin="0,10,0,0"/>
+    </Grid>
+</Page> 
