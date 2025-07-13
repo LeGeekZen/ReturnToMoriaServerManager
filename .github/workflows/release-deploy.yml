@@ -16,12 +16,15 @@ jobs:
       with:
         dotnet-version: '8.0.x'
         
-    - name: Download release assets
-      uses: actions/download-artifact@v4
-      with:
-        name: ReturnToMoriaServerManager
-        path: ./release/
-        
+    - name: Restore dependencies
+      run: dotnet restore ReturnToMoriaServerManager.sln
+      
+    - name: Build
+      run: dotnet build ReturnToMoriaServerManager.sln --no-restore --configuration Release
+      
+    - name: Publish
+      run: dotnet publish ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj --configuration Release --output ./publish --self-contained false
+      
     - name: Create release package
       run: |
         $version = "${{ github.event.release.tag_name }}"
@@ -29,7 +32,7 @@ jobs:
         
         # Create a clean release package
         New-Item -ItemType Directory -Path "./release-package" -Force
-        Copy-Item -Path "./release/*" -Destination "./release-package/" -Recurse
+        Copy-Item -Path "./publish/*" -Destination "./release-package/" -Recurse
         
         # Add README and LICENSE to the package
         Copy-Item -Path "./README.md" -Destination "./release-package/"
