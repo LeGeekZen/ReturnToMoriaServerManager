@@ -38,31 +38,6 @@ jobs:
         Copy-Item -Path "./README.md" -Destination "./release-package/"
         Copy-Item -Path "./LICENSE" -Destination "./release-package/"
         
-        # Create installation instructions
-        $installInstructions = @"
-# Installation Instructions
-
-## Prerequisites
-- Windows 10/11
-- .NET 8.0 Runtime (download from https://dotnet.microsoft.com/download/dotnet/8.0)
-
-## Installation Steps
-1. Extract this ZIP file to your desired location
-2. Run `ReturnToMoriaServerManager.exe`
-3. Follow the setup wizard to install SteamCMD and the server
-4. Configure your server settings
-5. Start your server
-
-## Support
-- GitHub Issues: https://github.com/your-username/ReturnToMoria_DedicatedServer/issues
-- Documentation: https://your-username.github.io/ReturnToMoria_DedicatedServer/
-
-## Version
-$version
-"@
-        
-        $installInstructions | Out-File -FilePath "./release-package/INSTALL.md" -Encoding UTF8
-        
         # Create the ZIP package
         Compress-Archive -Path "./release-package/*" -DestinationPath "./$packageName" -Force
         
