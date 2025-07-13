@@ -23,7 +23,7 @@ jobs:
       run: dotnet build ReturnToMoriaServerManager.sln --no-restore --configuration Release
       
     - name: Publish
-      run: dotnet publish ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj --configuration Release --output ./publish --self-contained true --runtime win-x64
+      run: dotnet publish ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj --configuration Release --output ./publish --self-contained false
       
     - name: Create release package
       run: |
@@ -66,14 +66,7 @@ $version
         # Create the ZIP package
         Compress-Archive -Path "./release-package/*" -DestinationPath "./$packageName" -Force
         
-    - name: Upload release package
-      uses: actions/upload-artifact@v4
-      with:
-        name: ReleasePackage
-        path: ./ReturnToMoriaServerManager-${{ github.event.release.tag_name }}.zip
-        retention-days: 90
-        
-    - name: Create release asset
+    - name: Upload Release Asset
       uses: actions/github-script@v7
       with:
         script: |
@@ -83,6 +76,7 @@ $version
           const assetPath = path.join(process.env.GITHUB_WORKSPACE, `ReturnToMoriaServerManager-${context.payload.release.tag_name}.zip`);
           
           if (fs.existsSync(assetPath)) {
+            console.log(`Uploading asset to release: ${context.payload.release.name}`);
             await github.rest.repos.uploadReleaseAsset({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -90,6 +84,8 @@ $version
               name: `ReturnToMoriaServerManager-${context.payload.release.tag_name}.zip`,
               data: fs.readFileSync(assetPath)
             });
+          } else {
+            console.log(`Asset file not found: ${assetPath}`);
           }
           
     - name: Notify community
