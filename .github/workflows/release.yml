@@ -1,12 +1,11 @@
-name: Build and Upload Release Assets
+name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
 
 jobs:
-  build:
+  build-and-release:
     runs-on: windows-latest
     
     steps:
@@ -17,62 +16,45 @@ jobs:
       with:
         dotnet-version: '8.0.x'
         
-    - name: Restore dependencies
-      run: dotnet restore ReturnToMoriaServerManager.sln
-      
-    - name: Build
-      run: dotnet build ReturnToMoriaServerManager.sln --no-restore --configuration Release
-      
-    - name: Publish
-      run: dotnet publish ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj --configuration Release --output ./publish --self-contained true --runtime win-x64
-      
+    - name: Build and Publish
+      run: |
+        dotnet restore ReturnToMoriaServerManager.sln
+        dotnet build ReturnToMoriaServerManager.sln --configuration Release
+        dotnet publish ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj --configuration Release --output ./publish --self-contained false
+        
     - name: Create Release Package
       run: |
-        $version = "${{ github.ref_name }}"
+        $version = "${{ github.event.release.tag_name }}"
         $packageName = "ReturnToMoriaServerManager-$version.zip"
         
-        # Create a clean release package
-        New-Item -ItemType Directory -Path "./release-package" -Force
-        Copy-Item -Path "./publish/*" -Destination "./release-package/" -Recurse
+        # Create package
+        New-Item -ItemType Directory -Path "./package" -Force
+        Copy-Item -Path "./publish/*" -Destination "./package/" -Recurse
+        Copy-Item -Path "./README.md" -Destination "./package/"
+        Copy-Item -Path "./LICENSE" -Destination "./package/"
         
-        # Add README and LICENSE to the package
-        Copy-Item -Path "./README.md" -Destination "./release-package/"
-        Copy-Item -Path "./LICENSE" -Destination "./release-package/"
+        # Create ZIP
+        Compress-Archive -Path "./package/*" -DestinationPath "./$packageName" -Force
         
-        # Create the ZIP package
-        Compress-Archive -Path "./release-package/*" -DestinationPath "./$packageName" -Force
-        
-    - name: Upload Release Assets
+    - name: Upload to Release
       uses: actions/github-script@v7
       with:
         script: |
           const fs = require('fs');
           const path = require('path');
           
-          const tagName = context.ref.replace('refs/tags/', '');
-          const assetPath = path.join(process.env.GITHUB_WORKSPACE, `ReturnToMoriaServerManager-${tagName}.zip`);
+          const assetPath = path.join(process.env.GITHUB_WORKSPACE, `ReturnToMoriaServerManager-${context.payload.release.tag_name}.zip`);
           
           if (fs.existsSync(assetPath)) {
-            // Get the release for this tag
-            const releases = await github.rest.repos.listReleases({
+            console.log('Uploading release package...');
+            await github.rest.repos.uploadReleaseAsset({
               owner: context.repo.owner,
-              repo: context.repo.repo
+              repo: context.repo.repo,
+              release_id: context.payload.release.id,
+              name: `ReturnToMoriaServerManager-${context.payload.release.tag_name}.zip`,
+              data: fs.readFileSync(assetPath)
             });
-            
-            const release = releases.data.find(r => r.tag_name === tagName);
-            
-            if (release) {
-              console.log(`Uploading asset to existing release: ${release.name}`);
-              await github.rest.repos.uploadReleaseAsset({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: release.id,
-                name: `ReturnToMoriaServerManager-${tagName}.zip`,
-                data: fs.readFileSync(assetPath)
-              });
-            } else {
-              console.log(`No release found for tag: ${tagName}`);
-            }
+            console.log('Upload successful!');
           } else {
-            console.log(`Asset file not found: ${assetPath}`);
+            console.log('Package not found!');
           } 
