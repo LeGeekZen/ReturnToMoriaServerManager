@@ -26,6 +26,22 @@ jobs:
     - name: Publish
       run: dotnet publish ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj --configuration Release --output ./publish --self-contained false
       
+    - name: Create Release Package
+      run: |
+        $version = "dev-${{ github.sha }}"
+        $packageName = "ReturnToMoriaServerManager-$version.zip"
+        
+        # Create a clean release package
+        New-Item -ItemType Directory -Path "./release-package" -Force
+        Copy-Item -Path "./publish/*" -Destination "./release-package/" -Recurse
+        
+        # Add README and LICENSE to the package
+        Copy-Item -Path "./README.md" -Destination "./release-package/"
+        Copy-Item -Path "./LICENSE" -Destination "./release-package/"
+        
+        # Create the ZIP package
+        Compress-Archive -Path "./release-package/*" -DestinationPath "./$packageName" -Force
+        
     - name: Create Development Release
       uses: softprops/action-gh-release@v2
       with:
@@ -51,7 +67,7 @@ jobs:
           ### Note
           This is a development build and may contain bugs or incomplete features.
         files: |
-          ./publish/**/*
+          ./ReturnToMoriaServerManager-dev-${{ github.sha }}.zip
         draft: false
         prerelease: true
       env:
