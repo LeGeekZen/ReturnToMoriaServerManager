@@ -23,7 +23,7 @@ jobs:
       run: dotnet build ReturnToMoriaServerManager.sln --no-restore --configuration Release
       
     - name: Publish
-      run: dotnet publish ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj --configuration Release --output ./publish --self-contained false
+      run: dotnet publish ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj --configuration Release --output ./publish --self-contained true --runtime win-x64
       
     - name: Create release package
       run: |

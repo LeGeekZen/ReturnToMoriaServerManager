@@ -28,7 +28,7 @@ jobs:
       run: dotnet test ReturnToMoriaServerManager.sln --no-build --verbosity normal --configuration Release
       
     - name: Publish
-      run: dotnet publish ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj --configuration Release --output ./publish --self-contained false
+      run: dotnet publish ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj --configuration Release --output ./publish --self-contained true --runtime win-x64
       
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
