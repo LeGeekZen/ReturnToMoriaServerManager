@@ -1,0 +1,67 @@
+name: Simple Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore ReturnToMoriaServerManager.sln
+      
+    - name: Build
+      run: dotnet build ReturnToMoriaServerManager.sln --no-restore --configuration Release
+      
+    - name: Publish
+      run: dotnet publish ReturnToMoriaServerManager/ReturnToMoriaServerManager.csproj --configuration Release --output ./publish --self-contained false
+      
+    - name: Create package
+      run: |
+        $version = "${{ github.event.release.tag_name }}"
+        $packageName = "ReturnToMoriaServerManager-$version.zip"
+        
+        # Create package directory
+        New-Item -ItemType Directory -Path "./package" -Force
+        
+        # Copy published files
+        Copy-Item -Path "./publish/*" -Destination "./package/" -Recurse
+        
+        # Add documentation
+        Copy-Item -Path "./README.md" -Destination "./package/"
+        Copy-Item -Path "./LICENSE" -Destination "./package/"
+        
+        # Create ZIP
+        Compress-Archive -Path "./package/*" -DestinationPath "./$packageName" -Force
+        
+    - name: Upload to release
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          const assetPath = path.join(process.env.GITHUB_WORKSPACE, `ReturnToMoriaServerManager-${context.payload.release.tag_name}.zip`);
+          
+          if (fs.existsSync(assetPath)) {
+            console.log(`Uploading ${assetPath} to release`);
+            await github.rest.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: context.payload.release.id,
+              name: `ReturnToMoriaServerManager-${context.payload.release.tag_name}.zip`,
+              data: fs.readFileSync(assetPath)
+            });
+            console.log('Upload successful');
+          } else {
+            console.log(`Asset not found: ${assetPath}`);
+          } 
